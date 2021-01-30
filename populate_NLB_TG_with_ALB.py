@@ -5,6 +5,7 @@ import os
 import random
 import sys
 from botocore.exceptions import ClientError
+import botocore
 import boto3
 import dns.resolver
 
@@ -49,18 +50,18 @@ TIME = datetime.strftime(((datetime.utcnow())), '%Y-%m-%d %H:%M:%S')
 try:
     s3 = boto3.resource('s3')
 except Exception as e:
-    print "ERROR: failed to connect to S3"
+    print("ERROR: failed to connect to S3")
     sys.exit(1)
 
 try:
     cwclient = boto3.client('cloudwatch')
 except ClientError as e:
-    print e.response['Error']['Message']
+    print(e.response['Error']['Message'])
     sys.exit(1)
 try:
     elbv2client = boto3.client('elbv2')
 except ClientError as e:
-    print e.response['Error']['Message']
+    print(e.response['Error']['Message'])
     sys.exit(1)
 
 
@@ -86,7 +87,7 @@ def put_metric_data(ip_dict):
             ]
         )
     except ClientError as e:
-        print e.response['Error']['Message']
+        print(e.response['Error']['Message'])
 
 
 def upload_ip_list(s3_bucket, file_name, json_object, object_key):
@@ -99,27 +100,29 @@ def upload_ip_list(s3_bucket, file_name, json_object, object_key):
 
     try:
         s3.meta.client.upload_file(temp_file.name, s3_bucket, object_key)
+    except botocore.exceptions.ClientError as e:
+        print(e.response['Error']['Message'])
     except Exception as e:
-        print e.response['Error']['Message']
+        print(e)
 
 
 def download_ip_list(s3_bucket, object_key):
     """
-    Download a IP address list of Load Balancer IP to S3
+    Download a IP address list of Load Balancer IP fromxs S3
     """
     try:
         s3client = boto3.client('s3')
     except Exception as e:
-        print "ERROR: failed to connect to S3"
-        print e
+        print("ERROR: failed to connect to S3")
+        print(e)
 
     try:
         response = s3client.get_object(Bucket=s3_bucket, Key=object_key)
     except Exception as e:
-        print "ERROR: Failed to download IP list from S3. " \
+        print("ERROR: Failed to download IP list from S3. " \
               "It is normal to see this message " \
-              "if it is the first time the Lambda function is triggered."
-        print e
+              "if it is the first time the Lambda function is triggered.")
+        print(e)
         return '{}'
     ip_str = response['Body'].read()
     old_ip_dict = json.loads(ip_str)
@@ -130,14 +133,14 @@ def register_target(tg_arn, new_target_list):
     """
       Register ALB's IP to NLB's target group
     """
-    print "INFO: Register new_target_list:{}".format(new_target_list)
+    print("INFO: Register new_target_list:{}".format(new_target_list))
     try:
         elbv2client.register_targets(
             TargetGroupArn=tg_arn,
             Targets=new_target_list
         )
     except ClientError as e:
-        print e.response['Error']['Message']
+        print(e.response['Error']['Message'])
 
 
 def deregister_target(tg_arn, new_target_list):
@@ -145,13 +148,13 @@ def deregister_target(tg_arn, new_target_list):
       Deregister ALB's IP from NLB's target group
     """
     try:
-        print "INFO: Deregistering targets: {}".format(new_target_list)
+        print("INFO: Deregistering targets: {}".format(new_target_list))
         elbv2client.deregister_targets(
             TargetGroupArn=tg_arn,
             Targets=new_target_list
         )
     except ClientError as e:
-        print e.response['Error']['Message']
+        print(e.response['Error']['Message'])
 
 
 def target_group_list(ip_list):
@@ -177,12 +180,12 @@ def describe_target_health(tg_arn):
         response = elbv2client.describe_target_health(
             TargetGroupArn=tg_arn)
         registered_ip_count = len(response['TargetHealthDescriptions'])
-        print "INFO: Number of currently registered IP: ", registered_ip_count
+        print("INFO: Number of currently registered IP: ", registered_ip_count)
         for target in response['TargetHealthDescriptions']:
             registered_ip = target['Target']['Id']
             registered_ip_list.append(registered_ip)
     except ClientError as e:
-        print e.response['Error']['Message']
+        print(e.response['Error']['Message'])
     return registered_ip_list
 
 
@@ -210,10 +213,10 @@ def lambda_handler(event, context):
         This is invoked when Lambda is called
         """
     if MAX_LOOKUP_PER_INVOCATION <= 0:
-        print "ERROR: MAX_LOOKUP_PER_INVOCATION is negative or zero, try again"
+        print("ERROR: MAX_LOOKUP_PER_INVOCATION is negative or zero, try again")
         sys.exit(1)
     if INVOCATIONS_BEFORE_DEREGISTRATION  <= 0:
-        print "ERROR: INVOCATIONS_BEFORE_DEREGISTRATION  is negative or zero, try again"
+        print("ERROR: INVOCATIONS_BEFORE_DEREGISTRATION  is negative or zero, try again")
         sys.exit(1)
     regional_name = '.'.join(ALB_DNS_NAME.split('.')[1:])
     authoritative_server_ip_list = []
@@ -223,7 +226,7 @@ def lambda_handler(event, context):
     authoritative_server_domain_list = set(dns_lookup(regional_name, "NS"))
     for nameserver_domain in authoritative_server_domain_list:
         authoritative_server_ip_list += dns_lookup(nameserver_domain, "A")
-    print "INFO: Authoritative name server: {}".format(authoritative_server_ip_list)
+    print("INFO: Authoritative name server: {}".format(authoritative_server_ip_list))
 
     i = 1
     while i <= MAX_LOOKUP_PER_INVOCATION:
@@ -232,16 +235,16 @@ def lambda_handler(event, context):
         if len(dns_lookup_result) < 8:
             break
         i+=1
-    print "INFO: IPs detected by DNS lookup:", regular_record_set
-    print "INFO: Number of IPs detected by DNS lookup: ", len(regular_record_set)
+    print("INFO: IPs detected by DNS lookup:", regular_record_set)
+    print("INFO: Number of IPs detected by DNS lookup: ", len(regular_record_set))
 
     # At this point if the actual_ip_list is empty then something has gone really wrong
     # An ALB should never have zero IPs in DNS; if it looks like that, bail out
     if not regular_record_set:
-        print "ERROR: The number of IPs in DNS for the ALB is" \
-              " showing up as zero. This cannot be correct."
-        print "ERROR: Script will not proceed with " \
-              "making changes to the NLB target group."
+        print("ERROR: The number of IPs in DNS for the ALB is" \
+              " showing up as zero. This cannot be correct.")
+        print("ERROR: Script will not proceed with " \
+              "making changes to the NLB target group.")
         sys.exit(1)
 
     new_active_ip_dict = {"LoadBalancerName": ALB_DNS_NAME, "TimeStamp": TIME}
@@ -256,9 +259,9 @@ def lambda_handler(event, context):
     #down load old active IPs and old pending IPs from S3
     old_active_ip_dict = json.loads(download_ip_list(S3_BUCKET, ACTIVE_IP_LIST_KEY))
     old_pending_ip_dict = json.loads(download_ip_list(S3_BUCKET, PENDING_IP_LIST_KEY))
-    print "INFO: Active IPs from last invocation: {}".format(old_active_ip_dict)
-    print "INFO:Pending deregistration IP from last invocation: {}".format(old_pending_ip_dict)
-    print "INFO: Active IPs from the current invocation {}".format(new_active_ip_dict)
+    print("INFO: Active IPs from last invocation: {}".format(old_active_ip_dict))
+    print("INFO:Pending deregistration IP from last invocation: {}".format(old_pending_ip_dict))
+    print("INFO: Active IPs from the current invocation {}".format(new_active_ip_dict))
     # Check for Registration
     # IPs that have not been registered, and missing from the old active IP list
     new_diff_ip_set_from_descibe = new_active_ip_set - registered_ip_set
@@ -276,39 +279,39 @@ def lambda_handler(event, context):
         old_diff_ip_set_from_s3 = old_active_ip_set - new_active_ip_set
         old_diff_ip_set_from_descibe = registered_ip_set - new_active_ip_set
         deregiter_ip_diff_set = old_diff_ip_set_from_s3 | old_diff_ip_set_from_descibe
-        print "INFO: Pending deregistration IPs from current invocation - {}".\
-            format(deregiter_ip_diff_set)
+        print("INFO: Pending deregistration IPs from current invocation - {}".\
+            format(deregiter_ip_diff_set))
         if old_pending_ip_dict:
             old_pending_ip_set = set(old_pending_ip_dict.keys())
-            print "INFO: Pending deregistration IPs from last invocation - {}" \
-                .format(old_pending_ip_set)
+            print("INFO: Pending deregistration IPs from last invocation - {}" \
+                .format(old_pending_ip_set))
             # Additional IPs are not in the old pending list
             additional_ip_set = deregiter_ip_diff_set - old_pending_ip_set
-            print "INFO: Additional pending IPs " \
+            print("INFO: Additional pending IPs " \
                   "(pending IPs in the current but not the last invocation) - {}"\
-                .format(additional_ip_set)
+                .format(additional_ip_set))
             for ip in additional_ip_set:
                 old_pending_ip_dict[ip] = 1
             # Existing IPs that already in the old pending list
             existing_ip_set = deregiter_ip_diff_set & old_pending_ip_set
-            print "INFO: Existing pending IPs (pending " \
+            print("INFO: Existing pending IPs (pending " \
                   "IPs in both current and the last invocation) - {}"\
-                .format(existing_ip_set)
+                .format(existing_ip_set))
             for ip in existing_ip_set:
                 old_pending_ip_dict[ip] += 1
             # Missing IPs -- In old pending list but no longer in the new pending list
             missing_ip_set = old_pending_ip_set - deregiter_ip_diff_set
-            print "INFO: Missing pending IPs (pending " \
-                  "IPs in the last but not the current invocation) - {}".format(missing_ip_set)
+            print("INFO: Missing pending IPs (pending " \
+                  "IPs in the last but not the current invocation) - {}".format(missing_ip_set))
             for ip in missing_ip_set:
                 old_pending_ip_dict.pop(ip)
             new_pending_ip_dict = old_pending_ip_dict
         else:
             for ip in deregiter_ip_diff_set:
                 new_pending_ip_dict[ip] = 1
-        print "INFO: New pending deregisration IP- {}" .format(new_pending_ip_dict)
+        print("INFO: New pending deregisration IP- {}" .format(new_pending_ip_dict))
     else:
-        print "INFO: No active IP List from last invocation"
+        print("INFO: No active IP List from last invocation")
     pending_ip_json = json.dumps(new_pending_ip_dict)
     upload_ip_list(S3_BUCKET, ACTIVE_FILENAME, active_ip_json, ACTIVE_IP_LIST_KEY)
     upload_ip_list(S3_BUCKET, PENDING_DEREGISTRATION_FILENAME, pending_ip_json, PENDING_IP_LIST_KEY)
@@ -316,10 +319,10 @@ def lambda_handler(event, context):
     if registration_ip_list:
         registerTarget_list = target_group_list(registration_ip_list)
         register_target(NLB_TG_ARN, registerTarget_list)
-        print "INFO: Registering {}".format(registration_ip_list)
+        print("INFO: Registering {}".format(registration_ip_list))
 
     else:
-        print "INFO: No new target registered"
+        print("INFO: No new target registered")
 
     deregistration_ip_list = []
     if new_pending_ip_dict:
@@ -327,8 +330,8 @@ def lambda_handler(event, context):
         for ip in pending_ip_list:
             if new_pending_ip_dict[ip] >= INVOCATIONS_BEFORE_DEREGISTRATION :
                 deregistration_ip_list.append(ip)
-                print "INFO: Deregistering IP: {}".format(ip)
+                print("INFO: Deregistering IP: {}".format(ip))
                 deregisterTarget_list = target_group_list(deregistration_ip_list)
                 deregister_target(NLB_TG_ARN, deregisterTarget_list)
     else:
-        print "INFO: No old target deregistered"
+        print("INFO: No old target deregistered")
