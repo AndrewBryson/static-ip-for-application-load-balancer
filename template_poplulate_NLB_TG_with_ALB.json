@@ -50,63 +50,63 @@
             		"RegionMap": {
             			"ap-northeast-1": {
             				"Bucket": "exampleloadbalancer-ap-northeast-1",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"ap-northeast-2": {
             				"Bucket": "exampleloadbalancer-ap-northeast-2",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"ap-south-1": {
             				"Bucket": "exampleloadbalancer-ap-south-1",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"ap-southeast-1": {
             				"Bucket": "exampleloadbalancer-ap-southeast-1",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"ap-southeast-2": {
             				"Bucket": "exampleloadbalancer-ap-southeast-2",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"ca-central-1": {
             				"Bucket": "exampleloadbalancer-ca-central-1",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"eu-central-1": {
             				"Bucket": "exampleloadbalancer-eu-central-1",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"eu-west-1": {
             				"Bucket": "exampleloadbalancer-eu-west-1",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"eu-west-2": {
             				"Bucket": "exampleloadbalancer-eu-west-2",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"sa-east-1": {
             				"Bucket": "exampleloadbalancer-sa-east-1",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"us-east-1": {
             				"Bucket": "exampleloadbalancer-us-east-1",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"us-east-2": {
             				"Bucket": "exampleloadbalancer-us-east-2",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"us-west-1": {
             				"Bucket": "exampleloadbalancer-us-west-1",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"us-west-2": {
             				"Bucket": "exampleloadbalancer-us-west-2",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			},
             			"eu-west-3": {
             				"Bucket": "exampleloadbalancer-eu-west-3",
-            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB-python38.zip"
             			}
 
             		}
