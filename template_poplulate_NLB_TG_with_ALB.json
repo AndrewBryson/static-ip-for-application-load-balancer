@@ -1,0 +1,272 @@
+            {
+            	"Transform": "AWS::Serverless-2016-10-31",
+            	"AWSTemplateFormatVersion": "2010-09-09",
+            	"Description": "Template of Register Application Load Balancer as IP target for Network Load Balancer",
+            	"Parameters": {
+            		"InternalALBDNSName": {
+            			"Type": "String",
+            			"Default": "",
+            			"Description": "Enter the DNS name of your internal Application Load Balancer name. e.g.application-load-balancer.elb.us-east-1.amazonaws.com"
+            		},
+            		"NLBTargetGroupARN": {
+            			"Type": "String",
+            			"Default": "",
+            			"Description": "Enter the target group ARN which you want the Application Load Balancer to be registered to"
+            		},
+            		"S3BucketName": {
+            			"Type": "String",
+            			"Default": "",
+            			"Description": "Enter the S3 Bucket name that you want to store Application Load Balancer's node IP addresses"
+            		},
+            		"ALBListenerPort": {
+            			"Type": "String",
+            			"Default": "",
+            			"Description": "Enter the traffic listener port of your internal Application Load Balancer"
+            		},
+            		"MAXDNSLookupPerInvocation": {
+            			"Type": "Number",
+            			"Default": 50,
+            			"Description": "Please specify the max DNS lookup this function can perform per invocation"
+            		},
+            		"InvocationBeforeDeregistration": {
+            			"Type": "Number",
+            			"Default": 3,
+            			"Description": "Please specify how many invocations are needed before a IP is deregistered"
+            		},
+            		"CWMetricFlagIPCount": {
+            			"Type": "String",
+            			"Default": "True",
+            			"AllowedValues": ["True", "False"],
+            			"Description": "Please specify if you want the Lambda function to create a CloudWatch metric to track IP count of your internal Application Load Balancer"
+            		},
+            		"Region": {
+            			"Type": "String",
+            			"Default": "us-east-1",
+            			"AllowedValues": ["us-east-1", "us-east-2", "us-west-1", "us-west-2", "eu-west-1", "eu-west-2", "eu-west-3", "eu-central-1", "ap-southeast-1", "ap-southeast-2", "ap-northeast-1", "ap-northeast-1", "ap-northeast-2", "sa-east-1", "ap-south-1", "ca-central-1"],
+            			"Description": "Please specify the region where you want to create your Lambda function"
+            		}
+            	},
+            	"Mappings": {
+            		"RegionMap": {
+            			"ap-northeast-1": {
+            				"Bucket": "exampleloadbalancer-ap-northeast-1",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"ap-northeast-2": {
+            				"Bucket": "exampleloadbalancer-ap-northeast-2",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"ap-south-1": {
+            				"Bucket": "exampleloadbalancer-ap-south-1",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"ap-southeast-1": {
+            				"Bucket": "exampleloadbalancer-ap-southeast-1",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"ap-southeast-2": {
+            				"Bucket": "exampleloadbalancer-ap-southeast-2",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"ca-central-1": {
+            				"Bucket": "exampleloadbalancer-ca-central-1",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"eu-central-1": {
+            				"Bucket": "exampleloadbalancer-eu-central-1",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"eu-west-1": {
+            				"Bucket": "exampleloadbalancer-eu-west-1",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"eu-west-2": {
+            				"Bucket": "exampleloadbalancer-eu-west-2",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"sa-east-1": {
+            				"Bucket": "exampleloadbalancer-sa-east-1",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"us-east-1": {
+            				"Bucket": "exampleloadbalancer-us-east-1",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"us-east-2": {
+            				"Bucket": "exampleloadbalancer-us-east-2",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"us-west-1": {
+            				"Bucket": "exampleloadbalancer-us-west-1",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"us-west-2": {
+            				"Bucket": "exampleloadbalancer-us-west-2",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			},
+            			"eu-west-3": {
+            				"Bucket": "exampleloadbalancer-eu-west-3",
+            				"Key": "blog-posts/static-ip-for-application-load-balancer/populate_NLB_TG_with_ALB.zip"
+            			}
+
+            		}
+            	},
+            	"Resources": {
+            		"LambdaFunction": {
+            			"Type": "AWS::Serverless::Function",
+            			"Properties": {
+            				"CodeUri": {
+            					"Bucket": {
+            						"Fn::FindInMap": ["RegionMap", {
+            							"Ref": "Region"
+            						}, "Bucket"]
+            					},
+            					"Key": {
+            						"Fn::FindInMap": ["RegionMap", {
+            							"Ref": "Region"
+            						}, "Key"]
+            					}
+            				},
+            				"Description": "Register Application Load Balancer to Network Load Balancer",
+            				"Handler": "populate_NLB_TG_with_ALB.lambda_handler",
+            				"Timeout": 300,
+            				"Role": {
+            					"Fn::GetAtt": [
+            						"LambdaIAMRole",
+            						"Arn"
+            					]
+            				},
+            				"Runtime": "python2.7",
+            				"Environment": {
+            					"Variables": {
+            						"ALB_DNS_NAME": {
+            							"Ref": "InternalALBDNSName"
+            						},
+            						"NLB_TG_ARN": {
+            							"Ref": "NLBTargetGroupARN"
+            						},
+            						"S3_BUCKET": {
+            							"Ref": "S3BucketName"
+            						},
+            						"MAX_LOOKUP_PER_INVOCATION": {
+            							"Ref": "MAXDNSLookupPerInvocation"
+            						},
+            						"INVOCATIONS_BEFORE_DEREGISTRATION": {
+            							"Ref": "InvocationBeforeDeregistration"
+            						},
+            						"CW_METRIC_FLAG_IP_COUNT": {
+            							"Ref": "CWMetricFlagIPCount"
+            						},
+            						"ALB_LISTENER": {
+            							"Ref": "ALBListenerPort"
+            						}
+            					}
+            				}
+            			}
+            		},
+            		"ScheduledRule": {
+            			"Type": "AWS::Events::Rule",
+            			"Properties": {
+            				"Description": "ScheduledRule",
+            				"ScheduleExpression": "rate(1 minute)",
+            				"State": "ENABLED",
+            				"Targets": [{
+            					"Arn": {
+            						"Fn::GetAtt": [
+            							"LambdaFunction",
+            							"Arn"
+            						]
+            					},
+            					"Id": "TargetFunctionV1"
+            				}]
+            			},
+            			"DependsOn": [
+            				"LambdaFunction"
+            			]
+            		},
+            		"LambdaInvokePermission": {
+            			"Type": "AWS::Lambda::Permission",
+            			"Properties": {
+            				"FunctionName": {
+            					"Fn::GetAtt": [
+            						"LambdaFunction",
+            						"Arn"
+            					]
+            				},
+            				"Principal": "events.amazonaws.com",
+            				"Action": "lambda:InvokeFunction",
+            				"SourceArn": {
+            					"Fn::GetAtt": [
+            						"ScheduledRule",
+            						"Arn"
+            					]
+            				}
+            			}
+            		},
+            		"LambdaIAMRole": {
+            			"Type": "AWS::IAM::Role",
+            			"Properties": {
+            				"AssumeRolePolicyDocument": {
+            					"Version": "2012-10-17",
+            					"Statement": [{
+            						"Effect": "Allow",
+            						"Principal": {
+            							"Service": "lambda.amazonaws.com"
+            						},
+            						"Action": "sts:AssumeRole"
+            					}]
+            				},
+            				"Path": "/",
+            				"Policies": [{
+            					"PolicyName": "Lambda-ALBasTarget",
+            					"PolicyDocument": {
+            						"Version": "2012-10-17",
+            						"Statement": [{
+            								"Sid": "LambdaLogging",
+            								"Effect": "Allow",
+            								"Action": [
+            									"logs:CreateLogGroup",
+            									"logs:CreateLogStream",
+            									"logs:PutLogEvents"
+            								],
+            								"Resource": [
+            									"arn:aws:logs:*:*:*"
+            								]
+            							},
+            							{
+            								"Sid": "S3",
+            								"Action": [
+            									"s3:Get*",
+            									"s3:PutObject",
+            									"s3:CreateBucket",
+            									"s3:ListBucket",
+            									"s3:ListAllMyBuckets"
+            								],
+            								"Effect": "Allow",
+            								"Resource": "*"
+            							},
+            							{
+            								"Sid": "ELB",
+            								"Action": [
+            									"elasticloadbalancing:Describe*",
+            									"elasticloadbalancing:RegisterTargets",
+            									"elasticloadbalancing:DeregisterTargets"
+            								],
+            								"Effect": "Allow",
+            								"Resource": "*"
+            							},
+            							{
+            								"Sid": "CW",
+            								"Action": [
+            									"cloudwatch:putMetricData"
+            								],
+            								"Effect": "Allow",
+            								"Resource": "*"
+            							}
+            						]
+            					}
+            				}]
+            			}
+            		}
+            	}
+            }
